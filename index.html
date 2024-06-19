@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간단한 틱택토 게임</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>간단한 틱택토 게임</h1>
+        <div id="board" class="board">
+            <!-- 틱택토 보드가 여기에 들어갈 예정 -->
+        </div>
+        <p id="status">게임을 시작합니다. 플레이어 1의 차례입니다.</p>
+        <button id="restartBtn">게임 재시작</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+<style class="css">body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+    margin: 0;
+}
+
+.container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 1px;
+    border: 1px solid #333;
+    background-color: #e8e8e8;
+    margin-bottom: 20px;
+}
+
+.board .cell {
+    width: 100px;
+    height: 100px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    font-size: 3em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.board .cell:hover {
+    background-color: #f0f0f0;
+}
+
+#status {
+    margin-top: 10px;
+    font-size: 1.2em;
+}
+
+#restartBtn {
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    margin-top: 20px;
+}
+</style>
+<script class="js">document.addEventListener('DOMContentLoaded', () => {
+    const board = document.getElementById('board');
+    const statusDisplay = document.getElementById('status');
+    const restartBtn = document.getElementById('restartBtn');
+
+    let currentPlayer = 'X'; // 현재 플레이어 (X 또는 O)
+    let gameActive = true; // 게임 상태 (진행 중 또는 종료)
+    let boardState = ['', '', '', '', '', '', '', '', '']; // 보드 상태 (9칸)
+
+    // 초기화 함수: 보드를 그리고 초기 상태를 설정합니다.
+    function init() {
+        createBoard();
+        currentPlayer = 'X'; // player X가 먼저 시작
+        gameActive = true;
+        statusDisplay.textContent = '게임을 시작합니다. 플레이어 1의 차례입니다.';
+    }
+
+    // 보드 생성 함수: HTML에서 보드를 그립니다.
+    function createBoard() {
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.dataset.index = i;
+            cell.addEventListener('click', handleCellClick);
+            board.appendChild(cell);
+        }
+    }
+
+    // 셀 클릭 이벤트 핸들러
+    function handleCellClick(event) {
+        const clickedCell = event.target;
+        const cellIndex = parseInt(clickedCell.dataset.index);
+
+        if (boardState[cellIndex] === '' && gameActive) {
+            placeStone(cellIndex, currentPlayer);
+            if (checkWin()) {
+                endGame(`${currentPlayer} 플레이어가 승리했습니다!`);
+            } else if (checkDraw()) {
+                endGame('무승부입니다.');
+            } else {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                statusDisplay.textContent = `차례는 플레이어 ${currentPlayer}입니다.`;
+            }
+        }
+    }
+
+    // 돌 놓기 함수: 보드 상태를 업데이트하고 HTML에 돌을 표시합니다.
+    function placeStone(cellIndex, player) {
+        boardState[cellIndex] = player;
+        const clickedCell = board.children[cellIndex];
+        clickedCell.textContent = player;
+    }
+
+    // 승리 조건 확인 함수: 승리 조건을 확인합니다.
+    function checkWin() {
+        const winConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // 가로
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // 세로
+            [0, 4, 8], [2, 4, 6] // 대각선
+        ];
+
+        for (const condition of winConditions) {
+            const [a, b, c] = condition;
+            if (boardState[a] !== '' && boardState[a] === boardState[b] && boardState[a] === boardState[c]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 무승부 확인 함수: 모든 셀이 다 채워졌는지 확인합니다.
+    function checkDraw() {
+        return boardState.every(cell => cell !== '');
+    }
+
+    // 게임 종료 함수: 게임 상태를 종료 상태로 설정하고 메시지를 출력합니다.
+    function endGame(message) {
+        gameActive = false;
+        statusDisplay.textContent = message;
+    }
+
+    // 게임 재시작 버튼 클릭 이벤트 핸들러
+    restartBtn.addEventListener('click', () => {
+        boardState = ['', '', '', '', '', '', '', '', ''];
+        currentPlayer = 'X';
+        gameActive = true;
+        statusDisplay.textContent = '게임을 시작합니다. 플레이어 1의 차례입니다.';
+        Array.from(board.children).forEach(cell => {
+            cell.textContent = '';
+        });
+    });
+
+    // 게임 초기화
+    init();
+});
+</script>
